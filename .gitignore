@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Generated data, Spark/Hive and Airflow state
+data/
+airflow-home/
+spark-warehouse/
+metastore_db/
+derby.log
+logs/
+
+.env
+.DS_Store
+.idea/
+.vscode/

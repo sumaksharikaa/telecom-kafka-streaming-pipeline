@@ -1,0 +1,43 @@
+# Telecom network-events pipeline configuration.
+# Environment overrides: TELECOM_CONFIG (this file), TELECOM_DATA_ROOT, TELECOM_SOURCE_MODE, KAFKA_BOOTSTRAP_SERVERS.
+
+data_root: data
+
+# "kafka" reads real topics; "file" reads Kafka-shaped JSON files written by the simulator
+# (same key/value/topic/partition/offset/timestamp columns), so the pipeline runs without a broker.
+source_mode: file
+
+kafka:
+  bootstrap_servers: localhost:9092
+  partitions: 6
+  topics:
+    usage: network.usage.events
+    cdc: subscriber.changes
+    dlq: network.usage.dlq
+  starting_offsets: earliest
+  max_offsets_per_trigger: 20000
+  fail_on_data_loss: true
+
+streaming:
+  # Events more than this far behind the newest event time are "late": the stream drops them
+  # from dedup/aggregation state and the daily backfill recovers them from bronze.
+  watermark_delay: 2 hours
+  kpi_window: 5 minutes
+  processing_trigger: 30 seconds
+  max_files_per_trigger: 50
+  publish_dlq_to_kafka: true
+
+validation:
+  supported_schema_versions: [1]
+  event_types: [DATA_SESSION, VOICE_CALL, SMS, DROPPED_CALL]
+  service_codes: [DATA_LTE, DATA_5G, VOICE_VOLTE, VOICE_3G, SMS_STD]
+  max_bytes_per_event: 5000000000
+  max_duration_sec: 86400
+
+reconciliation:
+  # Silver + backfill must hold every distinct valid event found in bronze.
+  max_missing_events: 0
+  max_offset_gaps: 0
+
+hive:
+  database: telecom
